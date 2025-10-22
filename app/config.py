@@ -10,3 +10,9 @@ class Config:
         "uiversion": 3,
     }
     CORS_ORIGINS = os.getenv("CORS_ORIGINS", "*").split(",")
+    
+    # Cloudinary settings
+    CLOUDINARY_URL = os.getenv("CLOUDINARY_URL")
+    
+    # SendGrid settings
+    SENDGRID_API_KEY = os.getenv("SENDGRID_API_KEY")

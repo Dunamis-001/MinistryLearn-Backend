@@ -7,3 +7,9 @@ class Role(db.Model):
     name = db.Column(db.String, unique=True, nullable=False)
 
     users = db.relationship("User", secondary="user_roles", back_populates="roles")
+
+    def to_dict(self):
+        return {
+            'id': self.id,
+            'name': self.name
+        }
