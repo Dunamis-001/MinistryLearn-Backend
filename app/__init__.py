@@ -1,5 +1,7 @@
 from flask import Flask
 from flask_cors import CORS
+from dotenv import load_dotenv
+load_dotenv()
 from .config import Config
 from .extensions import db, migrate, jwt, ma, api, swagger
 from .resources.health import health_bp

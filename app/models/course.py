@@ -1,10 +1,8 @@
 from datetime import datetime
 from ..extensions import db
 
-
 class Course(db.Model):
     __tablename__ = "courses"
-
 
     id = db.Column(db.Integer, primary_key=True)
     title = db.Column(db.String, nullable=False)
@@ -18,14 +16,12 @@ class Course(db.Model):
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
 
-
     # Relationships
     creator = db.relationship("User", back_populates="created_courses", foreign_keys=[created_by])
     modules = db.relationship("Module", back_populates="course", cascade="all, delete-orphan")
     assessments = db.relationship("Assessment", back_populates="course", cascade="all, delete-orphan")
     enrollments = db.relationship("Enrollment", back_populates="course", cascade="all, delete-orphan")
     announcements = db.relationship("Announcement", back_populates="course", cascade="all, delete-orphan")
-
 
     def to_dict(self):
         return {
@@ -41,4 +37,3 @@ class Course(db.Model):
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
         }
-
