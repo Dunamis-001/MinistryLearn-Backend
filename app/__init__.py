@@ -1,21 +1,8 @@
-from flask import Flask
+from flask import Flask, Blueprint
 from flask_cors import CORS
-from dotenv import load_dotenv
-load_dotenv()
 from .config import Config
-from .extensions import db, migrate, jwt, ma, api, swagger
+from .extensions import db, migrate, jwt, ma, api
 from .resources.health import health_bp
-from .resources import auth as auth_resource
-from .resources import courses as courses_resource
-from .resources import enrollments as enrollments_resource
-from .resources import modules as modules_resource
-from .resources import lessons as lessons_resource
-from .resources import assessments as assessments_resource
-from .resources import submissions as submissions_resource
-from .resources import certifications as certifications_resource
-from .resources import media as media_resource
-from .resources import announcements as announcements_resource
-from .openapi.swagger import swagger_blueprint
 
 def create_app():
     app = Flask(__name__)
@@ -23,24 +10,65 @@ def create_app():
 
     CORS(app, origins=app.config.get("CORS_ORIGINS", "*"))
 
+    # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
-    api.init_app(app)
-    ma.init_app(app)
-    app.register_blueprint(swagger_blueprint, url_prefix="/docs")
+    
+    # Register blueprints
     app.register_blueprint(health_bp, url_prefix="/health")
 
-    # API resources
-    auth_resource.register(api)
-    courses_resource.register(api)
-    enrollments_resource.register(api)
-    modules_resource.register(api)
-    lessons_resource.register(api)
-    assessments_resource.register(api)
-    submissions_resource.register(api)
-    certifications_resource.register(api)
-    media_resource.register(api)
-    announcements_resource.register(api)
+    # Create API blueprint
+    api_bp = Blueprint('api', __name__, url_prefix='/api')
+    api.init_app(api_bp)
+
+    # Import and register API resources after app initialization
+    try:
+        from .resources import auth as auth_resource
+        from .resources import courses as courses_resource
+        from .resources import enrollments as enrollments_resource
+        from .resources import modules as modules_resource
+        from .resources import lessons as lessons_resource
+        from .resources import assessments as assessments_resource
+        from .resources import submissions as submissions_resource
+        from .resources import certifications as certifications_resource
+        from .resources import media as media_resource
+        from .resources import announcements as announcements_resource
+
+        # Register API resources
+        print("Registering API resources...")
+        auth_resource.register(api)
+        print("✓ Auth resources registered")
+        courses_resource.register(api)
+        print("✓ Courses resources registered")
+        enrollments_resource.register(api)
+        print("✓ Enrollments resources registered")
+        modules_resource.register(api)
+        print("✓ Modules resources registered")
+        lessons_resource.register(api)
+        print("✓ Lessons resources registered")
+        assessments_resource.register(api)
+        print("✓ Assessments resources registered")
+        submissions_resource.register(api)
+        print("✓ Submissions resources registered")
+        certifications_resource.register(api)
+        print("✓ Certifications resources registered")
+        media_resource.register(api)
+        print("✓ Media resources registered")
+        announcements_resource.register(api)
+        print("✓ Announcements resources registered")
+        
+        # Register the API blueprint with the app
+        app.register_blueprint(api_bp)
+        
+        # Print all registered routes
+        print("\nRegistered routes:")
+        for rule in app.url_map.iter_rules():
+            print(f"  {rule.methods} {rule.rule}")
+            
+    except Exception as e:
+        print(f"Error registering resources: {e}")
+        import traceback
+        traceback.print_exc()
 
     return app
