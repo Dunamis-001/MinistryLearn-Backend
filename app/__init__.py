@@ -1,4 +1,4 @@
-from flask import Flask, Blueprint
+from flask import Flask, Blueprint, jsonify
 from flask_cors import CORS
 from .config import Config
 from .extensions import db, migrate, jwt, ma, api
@@ -70,5 +70,15 @@ def create_app():
         print(f"Error registering resources: {e}")
         import traceback
         traceback.print_exc()
+
+    # Root route to avoid 404 at service base URL
+    @app.route("/", methods=["GET"]) 
+    def index():
+        return jsonify({
+            "message": "MinistryLearn API",
+            "health": "/health/",
+            "docs": "/docs/",
+            "api_prefix": "/api"
+        }), 200
 
     return app
