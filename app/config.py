@@ -5,7 +5,11 @@ from dotenv import load_dotenv
 load_dotenv()
 
 class Config:
-    SQLALCHEMY_DATABASE_URI = os.getenv("DATABASE_URL")
+    db_url = os.getenv("DATABASE_URL")
+    if db_url and db_url.startswith("postgresql://"):
+        # Use psycopg3 driver automatically if a plain postgresql URL is provided
+        db_url = db_url.replace("postgresql://", "postgresql+psycopg://", 1)
+    SQLALCHEMY_DATABASE_URI = db_url
     SQLALCHEMY_TRACK_MODIFICATIONS = False
     PROPAGATE_EXCEPTIONS = True
     JWT_SECRET_KEY = os.getenv("JWT_SECRET", "dev-secret")
