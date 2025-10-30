@@ -4,7 +4,6 @@ attrs==25.3.0
 bcrypt==4.3.0
 blinker==1.8.2
 certifi==2025.10.5
-cffi==1.17.1
 click==8.1.8
 cloudinary==1.44.1
 cryptography==46.0.3
