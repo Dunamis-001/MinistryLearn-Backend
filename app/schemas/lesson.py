@@ -7,6 +7,9 @@ class LessonSchema(Schema):
     title = fields.Str()
     content = fields.Str()
     media_asset_id = fields.Int()
+    video_url = fields.Str()
+    assessment_id = fields.Int()
+    study_materials = fields.Raw()  # JSON array
     position = fields.Int()
     created_at = fields.DateTime(dump_only=True)
     updated_at = fields.DateTime(dump_only=True)
@@ -16,6 +19,9 @@ class LessonCreateSchema(Schema):
     title = fields.Str(required=True, validate=validate.Length(min=1, max=200))
     content = fields.Str(validate=validate.Length(max=10000))
     media_asset_id = fields.Int()
+    video_url = fields.Str(validate=validate.Length(max=500))
+    assessment_id = fields.Int()
+    study_materials = fields.Raw()  # JSON array of study material objects
     position = fields.Int(missing=1)
 
 
@@ -23,4 +29,7 @@ class LessonUpdateSchema(Schema):
     title = fields.Str(validate=validate.Length(min=1, max=200))
     content = fields.Str(validate=validate.Length(max=10000))
     media_asset_id = fields.Int()
+    video_url = fields.Str(validate=validate.Length(max=500))
+    assessment_id = fields.Int()
+    study_materials = fields.Raw()  # JSON array of study material objects
     position = fields.Int()

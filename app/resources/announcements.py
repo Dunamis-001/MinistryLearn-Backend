@@ -3,6 +3,7 @@ from flask_restful import Resource
 from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..extensions import db
 from ..models.announcement import Announcement
+from ..models.user import User
 from ..schemas.announcement import AnnouncementSchema, AnnouncementCreateSchema, AnnouncementUpdateSchema
 from ..utils.pagination import paginate
 from ..utils.rbac import role_required
@@ -27,15 +28,20 @@ class AnnouncementListResource(Resource):
     @jwt_required()
     @role_required(['Admin', 'Instructor'])
     def post(self):
-        """Create announcement"""
+        """Create announcement - Admin can send to all, Instructors to their courses"""
         try:
             data = announcement_create_schema.load(request.get_json() or {})
             user_id = get_jwt_identity()
+            user = User.query.get(user_id)
+            
+            # Only admins can send platform-wide announcements
+            if data.get("audience") == "all" and not user.has_role('Admin'):
+                return {"message": "Only admins can send platform-wide announcements"}, 403
            
             announcement = Announcement(
                 title=data["title"],
                 body=data["body"],
-                audience=data["audience"],
+                audience=data.get("audience", "course"),
                 course_id=data.get("course_id"),
                 role_name=data.get("role_name"),
                 created_by=user_id

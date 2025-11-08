@@ -4,6 +4,7 @@ from flask_jwt_extended import jwt_required, get_jwt_identity
 from ..extensions import db
 from ..models.enrollment import Enrollment
 from ..models.course import Course
+from ..models.user import User
 from ..schemas.enrollment import EnrollmentSchema, EnrollmentCreateSchema
 from ..utils.pagination import paginate
 from ..services.email_service import EmailService
@@ -24,7 +25,9 @@ class EnrollmentListResource(Resource):
     def get(self):
         """Get user's enrollments"""
         user_id = get_jwt_identity()
-        query = Enrollment.query.filter_by(user_id=user_id)
+        # Eager load course relationship to avoid N+1 queries
+        from sqlalchemy.orm import joinedload
+        query = Enrollment.query.options(joinedload(Enrollment.course)).filter_by(user_id=user_id)
         return paginate(query.order_by(Enrollment.created_at.desc()))
 
 
@@ -56,10 +59,18 @@ class EnrollmentResource(Resource):
 class CourseEnrollmentResource(Resource):
     @jwt_required()
     def post(self, course_id):
-        """Enroll in a course"""
+        """Enroll in a course - Only learners can enroll"""
         try:
             user_id = get_jwt_identity()
-           
+            user = User.query.get_or_404(user_id)
+            
+            # Check if user is a learner (not instructor or admin)
+            user_roles = [role.name for role in user.roles]
+            if 'Instructor' in user_roles or 'Admin' in user_roles:
+                return {
+                    "message": "Instructors and Admins cannot enroll in courses. Only Learners can enroll."
+                }, 403
+            
             # Check if course exists and is published
             course = Course.query.filter_by(id=course_id, published=True).first_or_404()
            

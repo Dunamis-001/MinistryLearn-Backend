@@ -39,12 +39,21 @@ class LessonListResource(Resource):
                 return {"message": "Forbidden"}, 403
            
             data = lesson_create_schema.load(request.get_json() or {})
+            
+            # Handle study_materials JSON
+            study_materials_json = None
+            if 'study_materials' in data and data['study_materials']:
+                import json
+                study_materials_json = json.dumps(data['study_materials'])
            
             lesson = Lesson(
                 module_id=module_id,
                 title=data["title"],
                 content=data.get("content"),
                 media_asset_id=data.get("media_asset_id"),
+                video_url=data.get("video_url"),
+                assessment_id=data.get("assessment_id"),
+                study_materials=study_materials_json,
                 position=data.get("position", 1)
             )
            
@@ -76,6 +85,11 @@ class LessonResource(Resource):
                 return {"message": "Forbidden"}, 403
            
             data = lesson_update_schema.load(request.get_json() or {})
+            
+            # Handle study_materials JSON
+            if 'study_materials' in data and data['study_materials'] is not None:
+                import json
+                data['study_materials'] = json.dumps(data['study_materials'])
            
             for key, value in data.items():
                 setattr(lesson, key, value)

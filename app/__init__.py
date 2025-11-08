@@ -1,4 +1,4 @@
-from flask import Flask, Blueprint, jsonify
+from flask import Flask, Blueprint
 from flask_cors import CORS
 from .config import Config
 from .extensions import db, migrate, jwt, ma, api
@@ -8,12 +8,16 @@ def create_app():
     app = Flask(__name__)
     app.config.from_object(Config)
 
-    CORS(app, origins=app.config.get("CORS_ORIGINS", "*"))
-
     # Initialize extensions
     db.init_app(app)
     migrate.init_app(app, db)
     jwt.init_app(app)
+    
+    # Register CLI commands
+    from .commands import create_example_courses, fix_leadership_thumbnail, remove_all_videos
+    app.cli.add_command(create_example_courses)
+    app.cli.add_command(fix_leadership_thumbnail)
+    app.cli.add_command(remove_all_videos)
     
     # Register blueprints
     app.register_blueprint(health_bp, url_prefix="/health")
@@ -34,6 +38,8 @@ def create_app():
         from .resources import certifications as certifications_resource
         from .resources import media as media_resource
         from .resources import announcements as announcements_resource
+        from .resources import ai_chat as ai_chat_resource
+        from .resources import ai_features as ai_features_resource
 
         # Register API resources
         print("Registering API resources...")
@@ -57,9 +63,24 @@ def create_app():
         print("✓ Media resources registered")
         announcements_resource.register(api)
         print("✓ Announcements resources registered")
+        ai_chat_resource.register(api)
+        print("✓ AI Chat resources registered")
+        ai_features_resource.register(api)
+        print("✓ AI Features resources registered")
         
         # Register the API blueprint with the app
         app.register_blueprint(api_bp)
+        
+        # Configure CORS AFTER blueprints are registered
+        # Apply CORS to entire app for development
+        CORS(app, 
+             origins="*",
+             methods=["GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"],
+             allow_headers=["Content-Type", "Authorization", "X-Requested-With"],
+             supports_credentials=True)
+        
+        # Note: Removed manual after_request handler to avoid duplicate CORS headers
+        # The CORS middleware above handles all CORS headers
         
         # Print all registered routes
         print("\nRegistered routes:")
@@ -70,15 +91,5 @@ def create_app():
         print(f"Error registering resources: {e}")
         import traceback
         traceback.print_exc()
-
-    # Root route to avoid 404 at service base URL
-    @app.route("/", methods=["GET"]) 
-    def index():
-        return jsonify({
-            "message": "MinistryLearn API",
-            "health": "/health/",
-            "docs": "/docs/",
-            "api_prefix": "/api"
-        }), 200
 
     return app

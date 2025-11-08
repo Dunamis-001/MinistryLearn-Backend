@@ -21,9 +21,16 @@ def register(api):
 
 class ModuleListResource(Resource):
     def get(self, course_id):
-        """Get modules for a course"""
-        modules = Module.query.filter_by(course_id=course_id).order_by(Module.position).all()
-        return [module.to_dict() for module in modules], 200
+        """Get modules for a course with lessons"""
+        from sqlalchemy.orm import joinedload
+        modules = Module.query.options(joinedload(Module.lessons)).filter_by(course_id=course_id).order_by(Module.position).all()
+        # Include lessons in the response
+        result = []
+        for module in modules:
+            module_dict = module.to_dict()
+            module_dict['lessons'] = [lesson.to_dict() for lesson in sorted(module.lessons, key=lambda x: x.position)]
+            result.append(module_dict)
+        return result, 200
    
     @jwt_required()
     @role_required(['Admin', 'Instructor'])

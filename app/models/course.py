@@ -12,6 +12,9 @@ class Course(db.Model):
     campus = db.Column(db.String)
     thumbnail_url = db.Column(db.Text)
     published = db.Column(db.Boolean, nullable=False, default=False)
+    approved = db.Column(db.Boolean, nullable=False, default=False)  # Admin approval required
+    approved_by = db.Column(db.Integer, db.ForeignKey("users.id"))  # Admin who approved
+    approved_at = db.Column(db.DateTime)
     created_by = db.Column(db.Integer, db.ForeignKey("users.id"))
     created_at = db.Column(db.DateTime, default=datetime.utcnow)
     updated_at = db.Column(db.DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)
@@ -33,6 +36,9 @@ class Course(db.Model):
             'campus': self.campus,
             'thumbnail_url': self.thumbnail_url,
             'published': self.published,
+            'approved': self.approved,
+            'approved_by': self.approved_by,
+            'approved_at': self.approved_at.isoformat() if self.approved_at else None,
             'created_by': self.created_by,
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()

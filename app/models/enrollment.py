@@ -25,7 +25,7 @@ class Enrollment(db.Model):
 
 
     def to_dict(self):
-        return {
+        result = {
             'id': self.id,
             'user_id': self.user_id,
             'course_id': self.course_id,
@@ -34,3 +34,7 @@ class Enrollment(db.Model):
             'created_at': self.created_at.isoformat(),
             'updated_at': self.updated_at.isoformat()
         }
+        # Include course data if available
+        if self.course:
+            result['course'] = self.course.to_dict()
+        return result
